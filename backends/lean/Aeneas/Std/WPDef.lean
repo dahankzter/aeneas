@@ -59,7 +59,7 @@ def ispec (P : IPre) (m : Result α) (Q : IPost α) : Prop :=
   P ⊢ iwp true m Q
 
 /-- Partial-correctness separation-logic specification -/
-@[irreducible] def dispec (P : IPre) (m : Result α) (Q : IPost α) : Prop :=
+def dispec (P : IPre) (m : Result α) (Q : IPost α) : Prop :=
   P ⊢ iwp false m Q
 
 /-- Total-correctness pure specification -/

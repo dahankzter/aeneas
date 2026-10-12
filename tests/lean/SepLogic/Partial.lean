@@ -56,8 +56,8 @@ example (p : MutRawPtr Nat) (value : Nat) :
     ⦃ p ↦ value ⦄ Fixtures.incr_ptr p ⦃ emp⦄div := by
   step*
 
-/- `dispec` is irreducible: the `i` tactics reach its entailment through `iwp =>`, and `step`
-through the same unfolding. -/
+/- The `i` tactics reach the entailment behind `dispec` through `iwp =>`, and `step` through the
+same unfolding. -/
 example (cell : Nat → IProp) (m : Result Unit) (h : ∀ x, ⦃ cell x ⦄ m ⦃ _ => emp ⦄div) :
     ⦃ iprop(∃ x, cell x) ⦄ m ⦃ _ => emp ⦄div := by
   iwp => iintro x

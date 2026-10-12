@@ -31,8 +31,6 @@ section ResultImplementation
 
 unseal Result
 
-attribute [local semireducible] dispec
-
 @[expose] section
 
 instance : EffectWP.Conjunctive effectWP where

@@ -52,6 +52,44 @@ let lean_builtin_types =
       ~kind:(KStruct [ ("fst", Some "fst"); ("snd", Some "snd") ]);
     (* file: "Aeneas/Std/Scalar/CoreConvertNum.lean", line: 805 *)
     mk_type "core::num::error::TryFromIntError" "core.num.error.TryFromIntError";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 274 *)
+    mk_type "core::num::niche_types::NonZeroI128Inner"
+      "core.num.niche_types.NonZeroI128Inner";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 241 *)
+    mk_type "core::num::niche_types::NonZeroI16Inner"
+      "core.num.niche_types.NonZeroI16Inner";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 252 *)
+    mk_type "core::num::niche_types::NonZeroI32Inner"
+      "core.num.niche_types.NonZeroI32Inner";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 263 *)
+    mk_type "core::num::niche_types::NonZeroI64Inner"
+      "core.num.niche_types.NonZeroI64Inner";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 230 *)
+    mk_type "core::num::niche_types::NonZeroI8Inner"
+      "core.num.niche_types.NonZeroI8Inner";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 285 *)
+    mk_type "core::num::niche_types::NonZeroIsizeInner"
+      "core.num.niche_types.NonZeroIsizeInner";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 208 *)
+    mk_type "core::num::niche_types::NonZeroU128Inner"
+      "core.num.niche_types.NonZeroU128Inner";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 175 *)
+    mk_type "core::num::niche_types::NonZeroU16Inner"
+      "core.num.niche_types.NonZeroU16Inner";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 186 *)
+    mk_type "core::num::niche_types::NonZeroU32Inner"
+      "core.num.niche_types.NonZeroU32Inner";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 197 *)
+    mk_type "core::num::niche_types::NonZeroU64Inner"
+      "core.num.niche_types.NonZeroU64Inner";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 164 *)
+    mk_type "core::num::niche_types::NonZeroU8Inner"
+      "core.num.niche_types.NonZeroU8Inner";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 219 *)
+    mk_type "core::num::niche_types::NonZeroUsizeInner"
+      "core.num.niche_types.NonZeroUsizeInner";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 74 *)
+    mk_type "core::num::nonzero::NonZero" "core.num.nonzero.NonZero";
     (* file: "Aeneas/Std/Core/Ops.lean", line: 92 *)
     mk_type "core::ops::control_flow::ControlFlow"
       "core.ops.control_flow.ControlFlow"
@@ -879,6 +917,86 @@ let lean_builtin_funs =
     mk_fun "core::mem::replace" "core.mem.replace" ~can_fail:false ~lift:false;
     (* file: "Aeneas/Std/Core/Core.lean", line: 81 *)
     mk_fun "core::mem::swap" "core.mem.swap" ~can_fail:false ~lift:false;
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 276 *)
+    mk_fun
+      "core::num::niche_types::{core::clone::Clone<core::num::niche_types::NonZeroI128Inner>}::clone"
+      "core.num.niche_types.NonZeroI128Inner.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 243 *)
+    mk_fun
+      "core::num::niche_types::{core::clone::Clone<core::num::niche_types::NonZeroI16Inner>}::clone"
+      "core.num.niche_types.NonZeroI16Inner.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 254 *)
+    mk_fun
+      "core::num::niche_types::{core::clone::Clone<core::num::niche_types::NonZeroI32Inner>}::clone"
+      "core.num.niche_types.NonZeroI32Inner.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 265 *)
+    mk_fun
+      "core::num::niche_types::{core::clone::Clone<core::num::niche_types::NonZeroI64Inner>}::clone"
+      "core.num.niche_types.NonZeroI64Inner.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 232 *)
+    mk_fun
+      "core::num::niche_types::{core::clone::Clone<core::num::niche_types::NonZeroI8Inner>}::clone"
+      "core.num.niche_types.NonZeroI8Inner.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 287 *)
+    mk_fun
+      "core::num::niche_types::{core::clone::Clone<core::num::niche_types::NonZeroIsizeInner>}::clone"
+      "core.num.niche_types.NonZeroIsizeInner.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 210 *)
+    mk_fun
+      "core::num::niche_types::{core::clone::Clone<core::num::niche_types::NonZeroU128Inner>}::clone"
+      "core.num.niche_types.NonZeroU128Inner.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 177 *)
+    mk_fun
+      "core::num::niche_types::{core::clone::Clone<core::num::niche_types::NonZeroU16Inner>}::clone"
+      "core.num.niche_types.NonZeroU16Inner.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 188 *)
+    mk_fun
+      "core::num::niche_types::{core::clone::Clone<core::num::niche_types::NonZeroU32Inner>}::clone"
+      "core.num.niche_types.NonZeroU32Inner.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 199 *)
+    mk_fun
+      "core::num::niche_types::{core::clone::Clone<core::num::niche_types::NonZeroU64Inner>}::clone"
+      "core.num.niche_types.NonZeroU64Inner.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 166 *)
+    mk_fun
+      "core::num::niche_types::{core::clone::Clone<core::num::niche_types::NonZeroU8Inner>}::clone"
+      "core.num.niche_types.NonZeroU8Inner.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 221 *)
+    mk_fun
+      "core::num::niche_types::{core::clone::Clone<core::num::niche_types::NonZeroUsizeInner>}::clone"
+      "core.num.niche_types.NonZeroUsizeInner.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 93 *)
+    mk_fun
+      "core::num::nonzero::{core::clone::Clone<core::num::nonzero::NonZero<@T, \
+       @Clause0_NonZeroInner>>}::clone"
+      "core.num.nonzero.NonZero.Insts.CoreCloneClone.clone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 114 *)
+    mk_fun
+      "core::num::nonzero::{core::cmp::PartialEq<core::num::nonzero::NonZero<@T, \
+       @Clause0_NonZeroInner>, core::num::nonzero::NonZero<@T, \
+       @Clause0_NonZeroInner>>}::eq"
+      "core.num.nonzero.NonZero.Insts.CoreCmpPartialEqNonZero.eq";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 123 *)
+    mk_fun
+      "core::num::nonzero::{core::cmp::PartialEq<core::num::nonzero::NonZero<@T, \
+       @Clause0_NonZeroInner>, core::num::nonzero::NonZero<@T, \
+       @Clause0_NonZeroInner>>}::ne"
+      "core.num.nonzero.NonZero.Insts.CoreCmpPartialEqNonZero.ne";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 141 *)
+    mk_fun
+      "core::num::nonzero::{core::hash::Hash<core::num::nonzero::NonZero<@T, \
+       @Clause0_NonZeroInner>>}::hash"
+      "core.num.nonzero.NonZero.Insts.CoreHashHash.hash";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 87 *)
+    mk_fun
+      "core::num::nonzero::{core::num::nonzero::NonZero<@T, \
+       @Clause0_NonZeroInner>}::get"
+      "core.num.nonzero.NonZero.get";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 81 *)
+    mk_fun
+      "core::num::nonzero::{core::num::nonzero::NonZero<@T, \
+       @Clause0_NonZeroInner>}::new"
+      "core.num.nonzero.NonZero.new";
     (* file: "Aeneas/Std/Scalar/CoreConvertNum.lean", line: 696 *)
     mk_fun "core::num::{i128}::cast_unsigned" "core.num.I128.cast_unsigned";
     (* file: "Aeneas/Std/Scalar/WrappingOps/Shl.lean", line: 46 *)
@@ -1029,6 +1147,15 @@ let lean_builtin_funs =
     (* file: "Aeneas/Std/Core/Iter.lean", line: 643 *)
     mk_fun "core::ops::range::{core::ops::range::RangeInclusive<@Idx>}::new"
       "core.ops.range.RangeInclusive.new";
+    (* file: "Aeneas/Std/Core/CoreOption.lean", line: 169 *)
+    mk_fun
+      "core::option::{core::ops::try_trait::FromResidual<core::option::Option<@T>, \
+       core::option::Option<!>>}::from_residual"
+      "core.option.Option.Insts.CoreOpsTry_traitFromResidualOption.from_residual";
+    (* file: "Aeneas/Std/Core/CoreOption.lean", line: 161 *)
+    mk_fun
+      "core::option::{core::ops::try_trait::Try<core::option::Option<@T>>}::branch"
+      "core.option.Option.Insts.CoreOpsTry.branch";
     (* file: "Aeneas/Std/Core/CoreOption.lean", line: 14 *)
     mk_fun "core::option::{core::option::Option<@T>}::expect"
       "core.option.Option.expect";
@@ -1460,6 +1587,11 @@ let lean_builtin_trait_decls =
     (* file: "Aeneas/Std/Core/Marker.lean", line: 7 *)
     mk_trait_decl "core::marker::StructuralPartialEq"
       "core.marker.StructuralPartialEq";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 54 *)
+    mk_trait_decl "core::num::nonzero::ZeroablePrimitive"
+      "core.num.nonzero.ZeroablePrimitive"
+      ~parent_clauses:[ "copyInst"; "copyInnerInst" ]
+      ~methods:[ ("toInner", "toInner"); ("ofInner", "ofInner") ];
     (* file: "Aeneas/Std/Core/Ops.lean", line: 45 *)
     mk_trait_decl "core::ops::bit::BitAnd" "core.ops.bit.BitAnd"
       ~methods:[ ("bitand", "bitand") ];
@@ -1533,6 +1665,49 @@ let lean_builtin_trait_impls =
       ~keep_trait_clauses:(Some [ true; false ]);
     (* file: "Aeneas/Std/Core/Core.lean", line: 46 *)
     mk_trait_impl "core::clone::Clone<bool>" "core.clone.CloneBool";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 278 *)
+    mk_trait_impl "core::clone::Clone<core::num::niche_types::NonZeroI128Inner>"
+      "core.num.niche_types.NonZeroI128Inner.Insts.CoreCloneClone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 245 *)
+    mk_trait_impl "core::clone::Clone<core::num::niche_types::NonZeroI16Inner>"
+      "core.num.niche_types.NonZeroI16Inner.Insts.CoreCloneClone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 256 *)
+    mk_trait_impl "core::clone::Clone<core::num::niche_types::NonZeroI32Inner>"
+      "core.num.niche_types.NonZeroI32Inner.Insts.CoreCloneClone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 267 *)
+    mk_trait_impl "core::clone::Clone<core::num::niche_types::NonZeroI64Inner>"
+      "core.num.niche_types.NonZeroI64Inner.Insts.CoreCloneClone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 234 *)
+    mk_trait_impl "core::clone::Clone<core::num::niche_types::NonZeroI8Inner>"
+      "core.num.niche_types.NonZeroI8Inner.Insts.CoreCloneClone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 289 *)
+    mk_trait_impl
+      "core::clone::Clone<core::num::niche_types::NonZeroIsizeInner>"
+      "core.num.niche_types.NonZeroIsizeInner.Insts.CoreCloneClone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 212 *)
+    mk_trait_impl "core::clone::Clone<core::num::niche_types::NonZeroU128Inner>"
+      "core.num.niche_types.NonZeroU128Inner.Insts.CoreCloneClone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 179 *)
+    mk_trait_impl "core::clone::Clone<core::num::niche_types::NonZeroU16Inner>"
+      "core.num.niche_types.NonZeroU16Inner.Insts.CoreCloneClone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 190 *)
+    mk_trait_impl "core::clone::Clone<core::num::niche_types::NonZeroU32Inner>"
+      "core.num.niche_types.NonZeroU32Inner.Insts.CoreCloneClone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 201 *)
+    mk_trait_impl "core::clone::Clone<core::num::niche_types::NonZeroU64Inner>"
+      "core.num.niche_types.NonZeroU64Inner.Insts.CoreCloneClone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 168 *)
+    mk_trait_impl "core::clone::Clone<core::num::niche_types::NonZeroU8Inner>"
+      "core.num.niche_types.NonZeroU8Inner.Insts.CoreCloneClone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 223 *)
+    mk_trait_impl
+      "core::clone::Clone<core::num::niche_types::NonZeroUsizeInner>"
+      "core.num.niche_types.NonZeroUsizeInner.Insts.CoreCloneClone";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 100 *)
+    mk_trait_impl
+      "core::clone::Clone<core::num::nonzero::NonZero<@T, \
+       @Clause0_NonZeroInner>>"
+      "core.num.nonzero.NonZero.Insts.CoreCloneClone";
     (* file: "Aeneas/Std/Core/Cmp.lean", line: 254 *)
     mk_trait_impl "core::cmp::PartialEq<&'a @A, &'b @B>"
       "core.cmp.PartialEqShared";
@@ -1549,6 +1724,12 @@ let lean_builtin_trait_impls =
       ~keep_params:(Some [ true; true; false; false ]);
     (* file: "Aeneas/Std/Core/Cmp.lean", line: 239 *)
     mk_trait_impl "core::cmp::PartialEq<bool, bool>" "core.cmp.PartialEqBool";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 132 *)
+    mk_trait_impl
+      "core::cmp::PartialEq<core::num::nonzero::NonZero<@T, \
+       @Clause0_NonZeroInner>, core::num::nonzero::NonZero<@T, \
+       @Clause0_NonZeroInner>>"
+      "core.num.nonzero.NonZero.Insts.CoreCmpPartialEqNonZero";
     (* file: "Aeneas/Std/Core/Cmp.lean", line: 286 *)
     mk_trait_impl "core::cmp::PartialOrd<&'a @A, &'b @B>"
       "core.cmp.PartialOrdShared";
@@ -1625,6 +1806,10 @@ let lean_builtin_trait_impls =
     mk_trait_impl "core::fmt::Debug<u8>" "core.fmt.DebugU8";
     (* file: "Aeneas/Std/Scalar/Fmt.lean", line: 75 *)
     mk_trait_impl "core::fmt::Debug<usize>" "core.fmt.DebugUsize";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 149 *)
+    mk_trait_impl
+      "core::hash::Hash<core::num::nonzero::NonZero<@T, @Clause0_NonZeroInner>>"
+      "core.num.nonzero.NonZero.Insts.CoreHashHash";
     (* file: "Aeneas/Std/Core/Iter.lean", line: 521 *)
     mk_trait_impl "core::iter::range::Step<i128>" "core.iter.range.StepI128";
     (* file: "Aeneas/Std/Core/Iter.lean", line: 482 *)
@@ -1725,6 +1910,109 @@ let lean_builtin_trait_impls =
     mk_trait_impl "core::marker::Copy<[@T; @N]>" "Array.Insts.CoreMarkerCopy";
     (* file: "Aeneas/Std/Core/Core.lean", line: 67 *)
     mk_trait_impl "core::marker::Copy<bool>" "core.marker.CopyBool";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 280 *)
+    mk_trait_impl "core::marker::Copy<core::num::niche_types::NonZeroI128Inner>"
+      "core.num.niche_types.NonZeroI128Inner.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 247 *)
+    mk_trait_impl "core::marker::Copy<core::num::niche_types::NonZeroI16Inner>"
+      "core.num.niche_types.NonZeroI16Inner.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 258 *)
+    mk_trait_impl "core::marker::Copy<core::num::niche_types::NonZeroI32Inner>"
+      "core.num.niche_types.NonZeroI32Inner.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 269 *)
+    mk_trait_impl "core::marker::Copy<core::num::niche_types::NonZeroI64Inner>"
+      "core.num.niche_types.NonZeroI64Inner.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 236 *)
+    mk_trait_impl "core::marker::Copy<core::num::niche_types::NonZeroI8Inner>"
+      "core.num.niche_types.NonZeroI8Inner.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 291 *)
+    mk_trait_impl
+      "core::marker::Copy<core::num::niche_types::NonZeroIsizeInner>"
+      "core.num.niche_types.NonZeroIsizeInner.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 214 *)
+    mk_trait_impl "core::marker::Copy<core::num::niche_types::NonZeroU128Inner>"
+      "core.num.niche_types.NonZeroU128Inner.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 181 *)
+    mk_trait_impl "core::marker::Copy<core::num::niche_types::NonZeroU16Inner>"
+      "core.num.niche_types.NonZeroU16Inner.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 192 *)
+    mk_trait_impl "core::marker::Copy<core::num::niche_types::NonZeroU32Inner>"
+      "core.num.niche_types.NonZeroU32Inner.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 203 *)
+    mk_trait_impl "core::marker::Copy<core::num::niche_types::NonZeroU64Inner>"
+      "core.num.niche_types.NonZeroU64Inner.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 170 *)
+    mk_trait_impl "core::marker::Copy<core::num::niche_types::NonZeroU8Inner>"
+      "core.num.niche_types.NonZeroU8Inner.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 225 *)
+    mk_trait_impl
+      "core::marker::Copy<core::num::niche_types::NonZeroUsizeInner>"
+      "core.num.niche_types.NonZeroUsizeInner.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 107 *)
+    mk_trait_impl
+      "core::marker::Copy<core::num::nonzero::NonZero<@T, \
+       @Clause0_NonZeroInner>>"
+      "core.num.nonzero.NonZero.Insts.CoreMarkerCopy";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 282 *)
+    mk_trait_impl
+      "core::num::nonzero::ZeroablePrimitive<i128, \
+       core::num::niche_types::NonZeroI128Inner>"
+      "core.num.nonzero.ZeroablePrimitiveI128";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 249 *)
+    mk_trait_impl
+      "core::num::nonzero::ZeroablePrimitive<i16, \
+       core::num::niche_types::NonZeroI16Inner>"
+      "core.num.nonzero.ZeroablePrimitiveI16";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 260 *)
+    mk_trait_impl
+      "core::num::nonzero::ZeroablePrimitive<i32, \
+       core::num::niche_types::NonZeroI32Inner>"
+      "core.num.nonzero.ZeroablePrimitiveI32";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 271 *)
+    mk_trait_impl
+      "core::num::nonzero::ZeroablePrimitive<i64, \
+       core::num::niche_types::NonZeroI64Inner>"
+      "core.num.nonzero.ZeroablePrimitiveI64";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 238 *)
+    mk_trait_impl
+      "core::num::nonzero::ZeroablePrimitive<i8, \
+       core::num::niche_types::NonZeroI8Inner>"
+      "core.num.nonzero.ZeroablePrimitiveI8";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 293 *)
+    mk_trait_impl
+      "core::num::nonzero::ZeroablePrimitive<isize, \
+       core::num::niche_types::NonZeroIsizeInner>"
+      "core.num.nonzero.ZeroablePrimitiveIsize";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 216 *)
+    mk_trait_impl
+      "core::num::nonzero::ZeroablePrimitive<u128, \
+       core::num::niche_types::NonZeroU128Inner>"
+      "core.num.nonzero.ZeroablePrimitiveU128";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 183 *)
+    mk_trait_impl
+      "core::num::nonzero::ZeroablePrimitive<u16, \
+       core::num::niche_types::NonZeroU16Inner>"
+      "core.num.nonzero.ZeroablePrimitiveU16";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 194 *)
+    mk_trait_impl
+      "core::num::nonzero::ZeroablePrimitive<u32, \
+       core::num::niche_types::NonZeroU32Inner>"
+      "core.num.nonzero.ZeroablePrimitiveU32";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 205 *)
+    mk_trait_impl
+      "core::num::nonzero::ZeroablePrimitive<u64, \
+       core::num::niche_types::NonZeroU64Inner>"
+      "core.num.nonzero.ZeroablePrimitiveU64";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 172 *)
+    mk_trait_impl
+      "core::num::nonzero::ZeroablePrimitive<u8, \
+       core::num::niche_types::NonZeroU8Inner>"
+      "core.num.nonzero.ZeroablePrimitiveU8";
+    (* file: "Aeneas/Std/Core/NonZero.lean", line: 227 *)
+    mk_trait_impl
+      "core::num::nonzero::ZeroablePrimitive<usize, \
+       core::num::niche_types::NonZeroUsizeInner>"
+      "core.num.nonzero.ZeroablePrimitiveUsize";
     (* file: "Aeneas/Std/Core/Ops.lean", line: 31 *)
     mk_trait_impl "core::ops::deref::Deref<Box<@T>, @T>"
       "core.ops.deref.DerefBoxInst"

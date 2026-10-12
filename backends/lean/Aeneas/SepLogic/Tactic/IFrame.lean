@@ -130,6 +130,55 @@ private partial def peelRequiredExists (required : Expr) :
     ← mkAppM ``entails_trans #[peeledEntailsBody, bodyEntailsRequired],
     witnesses.push witness.mvarId!)
 
+/-- `lhs ⊢ rhs` for assertions equal up to associativity and commutativity (`proveEqAC`). -/
+private def entailsAC (lhs rhs : Expr) (aliases : Array (Expr × Expr) := #[]) : MetaM Expr := do
+  mkAppM ``entails_of_eq #[← proveEqAC lhs rhs aliases]
+
+/-- Extend `proof : H ⊢ current` to `H ⊢ ⌜Pₖ⌝ ∗ … ∗ ⌜P₁⌝ ∗ current`, from the atoms `⌜Pᵢ⌝` and
+proofs of the `Pᵢ`. -/
+private def introPures (pures proofs : Array Expr) (current proof : Expr) :
+    MetaM (Expr × Expr) := do
+  let mut current := current
+  let mut proof := proof
+  for atom in pures, hP in proofs do
+    proof ← mkAppM ``entails_trans #[proof, ← mkAppM ``pure_sep_intro #[current, hP]]
+    current := mkApp2 (mkConst ``sep) atom current
+  return (current, proof)
+
+/-- Frame inference by cancellation: prove `source ⊢ callee ∗ ?F` from `weakening : pre ⊢ callee`,
+by matching the spatial atoms of `pre` with atoms of `source`; the unmatched atoms of `source`
+become `?F`. A pure atom of `pre` is matched with a pure atom of `source` if there is one, and
+proved from the context otherwise. `false` if a spatial atom or a witness stays unmatched. -/
+private def frameByMatching (discharger : Option Syntax.Tactic) (goal frameMVar : MVarId)
+    (source pre weakening : Expr) (witnesses : Array MVarId) : TacticM Bool := do
+  let (pures, spatial) := (← flatten pre).partition (·.consumeMData.isAppOfArity ``ipure 1)
+  let some (pairs, leftover) ← matchAll (← flatten source) spatial | return false
+  let mut pairs := pairs
+  let mut leftover := leftover
+  let mut taken := spatial
+  let mut toProve := #[]
+  for atom in pures do
+    match ← leftover.findIdxM? (isDefEq atom ·) with
+    | some i =>
+      pairs := pairs.push (atom, leftover[i]!)
+      leftover := leftover.eraseIdx! i
+      taken := taken.push atom
+    | none => toProve := toProve.push atom
+  -- every witness must be fixed by matching, before `provePure` sees the facts
+  for witness in witnesses do
+    unless ← witness.isAssigned do return false
+  let proofs ← toProve.mapM fun atom => do
+    provePure discharger (← instantiateMVars atom.consumeMData.appArg!)
+  -- source = taken ∗ frame ⊢ toProve ∗ taken ∗ frame = pre ∗ frame ⊢ callee ∗ frame
+  let frame := mkStar leftover
+  let matched := mkApp2 (mkConst ``sep) (mkStar taken) frame
+  let (withPures, proof) ← introPures toProve proofs matched (← entailsAC source matched pairs)
+  let reorder ← entailsAC withPures (mkApp2 (mkConst ``sep) (← instantiateMVars pre) frame)
+  let weaken ← mkAppM ``sep_mono #[← instantiateMVars weakening, ← mkAppM ``entails_refl #[frame]]
+  frameMVar.assign frame
+  goal.assign (← mkAppM ``entails_trans #[← mkAppM ``entails_trans #[proof, reorder], weaken])
+  return true
+
 mutual
 
 partial def proveWand (discharger : Option Syntax.Tactic)
@@ -140,76 +189,54 @@ partial def proveWand (discharger : Option Syntax.Tactic)
   solveGoal discharger premiseGoal.mvarId!
   mkAppM lemmaName #[premiseGoal]
 
+/-- Prove `source ⊢ destination`: by frame inference if `destination` is `callee ∗ ?F`, otherwise
+by cancelling atoms and proving the residue. -/
 partial def solveHimpl (discharger : Option Syntax.Tactic) (goal : MVarId) :
     TacticM Unit := goal.withContext do
   let some (source, destination) ← entailment? goal
     | throwError "expected a separation-logic entailment"
   let source ← reducePostApplication source
   let destination ← reducePostApplication destination
-  if let some frameMVar := ← frameMVar? destination then
-    let destArgs := destination.consumeMData.getAppArgs
-    let original ← reducePostApplication destArgs[0]!
-    let sourceAtoms ← flatten source
-    let solveWith (required weakening : Expr) (witnesses : Array MVarId) :
-        TacticM Bool := do
-      let (pures, spatial) :=
-        (← flatten required).partition (·.consumeMData.isAppOfArity ``ipure 1)
-      let some (pairs, rest) ← matchAll sourceAtoms spatial | return false
-      -- a pure atom is taken from the source if it is there, and proved from the context otherwise
-      let mut pairs := pairs
-      let mut frameAtoms := rest
-      let mut taken := spatial
-      let mut toProve := #[]
-      for atom in pures do
-        match ← frameAtoms.findIdxM? (isDefEq atom ·) with
-        | some i =>
-          pairs := pairs.push (atom, frameAtoms[i]!)
-          frameAtoms := frameAtoms.eraseIdx! i
-          taken := taken.push atom
-        | none => toProve := toProve.push atom
-      -- every witness must be fixed by matching, before `provePure` sees the facts
-      for witness in witnesses do
-        unless ← witness.isAssigned do return false
-      let frame := mkStar frameAtoms
-      let mut current := mkApp2 (mkConst ``sep) (mkStar taken) frame
-      let mut proof ← mkAppM ``entails_of_eq #[← proveEqAC source current pairs]
-      for atom in toProve do
-        let hP ← provePure discharger (← instantiateMVars atom.consumeMData.appArg!)
-        proof ← mkAppM ``entails_trans #[proof, ← mkAppM ``pure_sep_intro #[current, hP]]
-        current := mkApp2 (mkConst ``sep) atom current
-      frameMVar.assign frame
-      let cancelled := mkApp2 (mkConst ``sep) (← instantiateMVars required) frame
-      let reorder ← mkAppM ``entails_of_eq #[← proveEqAC current cancelled]
-      let weaken ← mkAppM ``sep_mono
-        #[← instantiateMVars weakening, ← mkAppM ``entails_refl #[frame]]
-      goal.assign (← mkAppM ``entails_trans #[← mkAppM ``entails_trans #[proof, reorder], weaken])
-      return true
-    let solvePeeled : TacticM Bool := do
-      let (peeled, weakening, witnesses) ← peelRequiredExists original
-      solveWith peeled weakening witnesses
-    let openSourceExists : TacticM Bool := do
-      let (sourceFn, sourceArgs) := source.consumeMData.withApp fun fn args => (fn, args)
-      unless sourceFn.isConstOf ``iexists && sourceArgs.size = 2 do return false
-      let some u := sourceFn.constLevels!.head? | return false
-      let ι := sourceArgs[0]!
-      let J := sourceArgs[1]!
-      let some (body, frameFn) ← withLocalDeclD (← mkFreshUserName `x) ι fun x => do
-        let innerFrame ← mkFreshExprMVar (mkConst ``IProp)
-        let innerGoal ← mkFreshExprSyntheticOpaqueMVar (← mkAppM ``Entails
-          #[← Core.betaReduce (mkApp J x), mkApp2 (mkConst ``sep) original innerFrame])
-        try solveHimpl discharger innerGoal.mvarId! catch _ => return none
-        return some (← mkLambdaFVars #[x] (← instantiateMVars innerGoal),
-          ← mkLambdaFVars #[x] (← instantiateMVars innerFrame))
-        | return false
-      frameMVar.assign (mkApp2 (mkConst ``iexists [u]) ι frameFn)
-      goal.assign (mkAppN (mkConst ``entails_exists_frame [u]) #[ι, original, J, frameFn, body])
-      return true
-    unless ← commitWhen (solveWith original (← mkAppM ``entails_refl #[original]) #[]) <||>
-        commitWhen solvePeeled <||> commitWhen openSourceExists do
-      throwError "required spatial assertions are not present in the precondition\
-        \nsource: {source}\ndestination: {destination}"
-  else
-    solveResidual discharger (← cancelGoal goal)
+  match ← frameMVar? destination with
+  | some frameMVar => inferFrame discharger goal frameMVar source destination
+  | none => solveResidual discharger (← cancelGoal goal)
+
+/-- Frame inference for `source ⊢ callee ∗ ?F`: cancel `callee` directly, else after replacing its
+leading `∃`s by witness metavariables, else under the `∃` of `source`. -/
+partial def inferFrame (discharger : Option Syntax.Tactic) (goal frameMVar : MVarId)
+    (source destination : Expr) : TacticM Unit := do
+  let callee ← reducePostApplication destination.consumeMData.appFn!.appArg!
+  let direct :=
+    frameByMatching discharger goal frameMVar source callee (← mkAppM ``entails_refl #[callee]) #[]
+  let peeled : TacticM Bool := do
+    let (pre, weakening, witnesses) ← peelRequiredExists callee
+    if witnesses.isEmpty then return false
+    frameByMatching discharger goal frameMVar source pre weakening witnesses
+  unless ← commitWhen direct <||> commitWhen peeled <||>
+      commitWhen (frameUnderSourceExists discharger goal frameMVar source callee) do
+    throwError "required spatial assertions are not present in the precondition\
+      \nsource: {source}\ndestination: {destination}"
+
+/-- Frame inference under the `∃` of `source = ∃ x, J x`: solve `J x ⊢ callee ∗ ?F'` for a fresh
+`x`, then `?F := ∃ x, ?F' x` (`entails_exists_frame`). `false` if `source` is not an `∃`. -/
+partial def frameUnderSourceExists (discharger : Option Syntax.Tactic) (goal frameMVar : MVarId)
+    (source callee : Expr) : TacticM Bool := do
+  let (sourceFn, sourceArgs) := source.consumeMData.withApp fun fn args => (fn, args)
+  unless sourceFn.isConstOf ``iexists && sourceArgs.size = 2 do return false
+  let some u := sourceFn.constLevels!.head? | return false
+  let ι := sourceArgs[0]!
+  let J := sourceArgs[1]!
+  let some (body, frameFn) ← withLocalDeclD (← mkFreshUserName `x) ι fun x => do
+    let innerFrame ← mkFreshExprMVar (mkConst ``IProp)
+    let innerGoal ← mkFreshExprSyntheticOpaqueMVar (← mkAppM ``Entails
+      #[← Core.betaReduce (mkApp J x), mkApp2 (mkConst ``sep) callee innerFrame])
+    try solveHimpl discharger innerGoal.mvarId! catch _ => return none
+    return some (← mkLambdaFVars #[x] (← instantiateMVars innerGoal),
+      ← mkLambdaFVars #[x] (← instantiateMVars innerFrame))
+    | return false
+  frameMVar.assign (mkApp2 (mkConst ``iexists [u]) ι frameFn)
+  goal.assign (mkAppN (mkConst ``entails_exists_frame [u]) #[ι, callee, J, frameFn, body])
+  return true
 
 /-- Prove the residual `left ⊢ right` of `cancelGoal`, where `right` may only have pure atoms,
 which are proved, and one magic wand, which absorbs `left` (dropped otherwise). -/
@@ -237,13 +264,8 @@ partial def solveResidual (discharger : Option Syntax.Tactic) (goal : MVarId) :
   let (current, proof) ← match absorbing with
     | some wand => pure (wand, ← proveWand discharger left wand)
     | none => pure (mkConst `Aeneas.SepLogic.emp, mkApp (mkConst ``entails_emp_r) left)
-  let mut current := current
-  let mut proof := proof
-  for expected in pures, pureProof in pureProofs do
-    proof ← mkAppM ``entails_trans #[proof, ← mkAppM ``pure_sep_intro #[current, pureProof]]
-    current := mkApp2 (mkConst ``sep) expected current
-  goal.assign (← mkAppM ``entails_trans
-    #[proof, ← mkAppM ``entails_of_eq #[← proveEqAC current right]])
+  let (current, proof) ← introPures pures pureProofs current proof
+  goal.assign (← mkAppM ``entails_trans #[proof, ← entailsAC current right])
 
 partial def solveGoal (discharger : Option Syntax.Tactic) (goal : MVarId) :
     TacticM Unit := do

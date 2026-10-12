@@ -266,15 +266,7 @@ elab_rules : tactic
   | `(tactic| iframe $[by $tac?]?) => Tactic.focus do withMainContext do
   discard <| expectEntailment `iframe (post := true)
   let discharger : Option Syntax.Tactic := tac?.map fun tac => ⟨tac.raw⟩
-  let localAsms :=
-    (← (← getLCtx).getAssumptions).map LocalDecl.fvarId |>.toArray
-  let _ ← Aeneas.Simp.simpAt true
-    { dsimp := false, failIfUnchanged := false, maxDischargeDepth := 1 }
-    { hypsToUse := localAsms }
-    (.targets #[] true)
-  if !(← getGoals).isEmpty then
-    let goal ← getMainGoal
-    IFrame.solveGoal discharger goal
-    replaceMainGoal []
+  IFrame.solveGoal discharger (← getMainGoal)
+  replaceMainGoal []
 
 end Aeneas.SepLogic

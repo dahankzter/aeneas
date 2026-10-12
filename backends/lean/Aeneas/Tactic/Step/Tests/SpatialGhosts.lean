@@ -44,6 +44,7 @@ example (cell : Nat → Nat → IProp) (read : Nat → Result Nat)
     WP.ispec (cell p current)
       (do let value ← read q; pure (value + 1))
       (fun result => iprop(⌜result = current + 1⌝ ∗ cell p current)) := by
+  subst hp
   step*
 
 example (pre frame : IProp) (cell : Nat → IProp) (P Q : Nat → Prop)

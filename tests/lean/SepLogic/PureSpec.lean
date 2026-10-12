@@ -395,6 +395,8 @@ theorem increment.spec (p : MutRawPtr Nat) (n : Nat) :
     ⦄ := by
   unfold increment
   step*
+  subst_vars
+  iframe
 
 def incrementTwiceSL (p : MutRawPtr Nat) : Result Nat := do
   let _ ← increment p ()
@@ -427,6 +429,8 @@ example (p : MutRawPtr Nat) (n : Nat) :
     ⦃ p ↦ n ⦄ usePairSL p ⦃ p ↦ (n + 1)⦄ := by
   unfold usePairSL
   step*
+  subst_vars
+  iframe
 
 def updateTwiceSL (p : MutRawPtr Nat) (n : Nat) : Result Unit := do
   MutRawPtr.write p (n + 1)
@@ -528,6 +532,8 @@ theorem bumpCell.spec (p : MutRawPtr Nat) (v : Nat) :
     ⦃ p ↦ v ⦄ bumpCell p ⦃ p ↦ v + 1⦄ := by
   unfold bumpCell
   step*
+  subst_vars
+  iframe
 
 def bumpBoxed (v : Nat) : Result Nat := do
   let p ← into_raw v
@@ -610,6 +616,8 @@ example (p : MutRawPtr Nat) (v w : Nat) :
       ⦃ y => ⌜y = w + 1⌝ ∗ p ↦ w + 1⦄ := by
   apply callWith.spec
   step*
+  subst_vars
+  iframe
 
 def updateWith (f : Nat → Result Nat) (p : MutRawPtr Nat) : Result Unit := do
   let v ← RawPtr.read p
@@ -624,6 +632,8 @@ theorem updateWith.spec (f : Nat → Result Nat) (p : MutRawPtr Nat) (v w : Nat)
   step as ⟨v', hv'⟩
   subst v'
   step*
+  subst_vars
+  iframe
 
 example (p : MutRawPtr Nat) (v : Nat) :
     ⦃ p ↦ v ⦄ updateWith bump p ⦃ p ↦ v + 1⦄ := by

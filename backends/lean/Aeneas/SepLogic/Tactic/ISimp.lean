@@ -19,15 +19,15 @@ open Lean Lean.Elab Lean.Meta Lean.Elab.Tactic Normalize Matchers
 namespace IFrame
 
 /-- Like `solveGoal`, but stops at what it cannot prove instead of failing; with
-`useHyps := false`, the goal is never rewritten with the hypotheses. -/
-partial def simplifyGoal (goal : MVarId) (useHyps : Bool := true) : TacticM (List MVarId) := do
+`useFacts := false`, the goal is not rewritten with the facts pulled from the precondition. -/
+partial def simplifyGoal (goal : MVarId) (useFacts : Bool := true) : TacticM (List MVarId) := do
   let target := (← instantiateMVars (← goal.getType)).consumeMData
   if target.isAppOfArity ``postEntails 3 then
     let (_, next) ← goal.intro1P
-    return ← simplifyGoal next useHyps
+    return ← simplifyGoal next useFacts
   unless target.isAppOfArity ``Entails 2 do return [goal]
   if ← isFrameInference goal then return [goal]
-  let some (goal, witnesses) ← prepareGoal goal useHyps | return []
+  let some (goal, witnesses) ← prepareGoal goal useFacts | return []
   let goal ← cancelGoal goal (unique := true)
   let wandGoal? ← goal.withContext do
     let some (source, destination) ← entailment? goal | return none
@@ -37,15 +37,11 @@ partial def simplifyGoal (goal : MVarId) (useHyps : Bool := true) : TacticM (Lis
     goal.assign (← mkAppM lemmaName #[next])
     return some next.mvarId!
   let goals ← match wandGoal? with
-    | some wandGoal => simplifyGoal wandGoal useHyps
+    | some wandGoal => simplifyGoal wandGoal useFacts
     | none => do
-      let hyps ← if useHyps then goal.withContext do
-          return (← (← getLCtx).getAssumptions).map (·.fvarId) |>.toArray
-        else pure #[]
       let some goal ← simpGoal goal true
           { addSimpThms := #[``sep_emp_l_eq, ``sep_emp_r_eq, ``sep_ipure_eq,
-              ``entails_emp_ipure_iff, ``entails_refl, ``and_true, ``true_and],
-            hypsToUse := hyps }
+              ``entails_emp_ipure_iff, ``entails_refl, ``and_true, ``true_and] }
         | pure []
       if ← goal.withContext goal.assumptionCore then pure [] else pure [goal]
   (witnesses.toList ++ goals).filterM fun goal => return !(← goal.isAssigned)
@@ -53,7 +49,7 @@ partial def simplifyGoal (goal : MVarId) (useHyps : Bool := true) : TacticM (Lis
 end IFrame
 
 /-- Like `iframe`, but leaves unsolved pure obligations as goals. `isimp only` neither unfolds
-with `isimps` nor rewrites with the hypotheses. -/
+with `isimps` nor rewrites with the facts pulled from the precondition. -/
 syntax (name := iSimp) "isimp" (" only")? (" [" term,* "]")? : tactic
 
 private def evalISimp (lemmas : Array (TSyntax `term)) (simpOnly : Bool := false) : TacticM Unit :=

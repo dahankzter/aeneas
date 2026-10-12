@@ -24,6 +24,8 @@ theorem incr_ptr.spec (p : MutRawPtr Nat) (value : Nat) :
     ⦃ p ↦ value ⦄ incr_ptr p ⦃ p ↦ value + 1⦄ := by
   unfold incr_ptr
   step*
+  subst_vars
+  iframe
 
 /-- The pointer points to a copy of `value` (see `core.ptr.from_mut`): the increment is read back
 through it. -/

@@ -67,12 +67,16 @@ example (p : MutRawPtr Nat) :
   fail_if_success iintro_shallow
   iwp => iintro_shallow
   step*
+  subst_vars
+  iframe
 
 example (p : MutRawPtr Nat) (value : Nat) :
     ⦃ iprop(⌜value = 1⌝ ∗ p ↦ value) ⦄ Fixtures.incr_ptr p ⦃ p ↦ 2⦄ := by
   unfold Fixtures.incr_ptr
   iwp => iintro
   step*
+  subst_vars
+  iframe
 
 example (p : MutRawPtr Nat) (value : Nat) :
     ⦃ iprop(p ↦ value ∗ ⌜value = 1⌝) ⦄ pure () ⦃ p ↦ value⦄ := by
@@ -101,7 +105,10 @@ example (p q : MutRawPtr Nat) :
     ⦃ iprop(⌜q = p⌝ ∗ p ↦ 1) ⦄ Fixtures.incr_ptr q ⦃ iprop(⌜q = p⌝ ∗ p ↦ 2)⦄ := by
   unfold Fixtures.incr_ptr
   iwp => iintro_shallow
+  subst_vars
   step*
+  subst_vars
+  iframe
 
 example (p : MutRawPtr Nat) (n : Nat) :
     ⦃ iprop(⌜n = 1⌝ ∗ p ↦ n) ⦄ pure () ⦃ iprop(⌜n = 1⌝ ∗ p ↦ 1)⦄ := by
@@ -370,6 +377,8 @@ example (p q : MutRawPtr Nat) :
   unfold Fixtures.incr_ptr
   iwp => irewrite (swapEq p q)
   step*
+  subst_vars
+  iframe
 
 example (p : MutRawPtr Nat) : ⦃ p ↦ 1 ⦄ (pure 5 : Result Nat) ⦃ v => ⌜v = 5⌝ ∗ p ↦ 1⦄ := by
   step*

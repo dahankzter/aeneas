@@ -205,18 +205,9 @@ def simpGoal (goal : MVarId) (simpOnly : Bool) (args : Aeneas.Simp.SimpArgs) :
   finally
     setGoals saved
 
-private def simpEntailment (goal : MVarId) (simpOnly : Bool)
-    (args : Aeneas.Simp.SimpArgs) : TacticM MVarId := do
-  let some goal ← simpGoal goal simpOnly args
-    | throwError "the entailment was unexpectedly closed while normalizing it"
-  return goal
-
 /-- Remove `emp` units and float existentials out of `∗`. -/
 def sepNormThms : Array Name :=
   #[``sep_emp_l_eq, ``sep_emp_r_eq, ``sep_exists_l_eq, ``sep_exists_r_eq]
-
-def decompose (goal : MVarId) : TacticM MVarId := do
-  simpEntailment goal false { simpThms := #[← isimpsExt.getTheorems] }
 
 /-- `e` with the definitions hiding connectives unfolded along its `sep` spine, except in
 `frame`. -/

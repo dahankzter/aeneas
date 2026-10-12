@@ -5,10 +5,11 @@ public meta import Lean
 public meta import AeneasMeta.Simp
 
 /-! `iframe` proves `H₁ ⊢ H₂` / `Q₁ ⊢+ Q₂`, and infers `?F` in `step`'s goals `H ⊢ Hcallee ∗ ?F`.
-It simps with the local hypotheses, pulls left `∃`/`⌜⌝` into the context, turns right `∃` into
-metavariables, cancels atoms by unification (backtracking `matchAll`), reorders with reflective AC
-proofs (`proveEqAC`) and proves pure residues with `grind`. Same algorithm as CFML `xsimpl` / SPlean
-`xsimp`; ours adds frame metavariables, matching up to unfolding and hypothesis rewriting. -/
+It pulls left `∃`/`⌜⌝` into the context, turns right `∃` into metavariables, cancels atoms by
+unification (backtracking `matchAll`), reorders with reflective AC proofs (`proveEqAC`) and proves
+pure residues with `grind`. Same algorithm as CFML `xsimpl` / SPlean `xsimp`; ours adds frame
+metavariables and matching up to unfolding of definitions whose body is a connective. Other
+predicates stay folded: unfold them explicitly, with `irewrite` or `isimp`. -/
 
 public meta section
 
@@ -103,12 +104,11 @@ partial def instantiateRightExists (goal : MVarId)
 /-- The shared start of `iframe` and `isimp` on an entailment that is not frame inference: pull
 the ∃ and ⌜⌝ of the precondition into the context, and replace the ∃ of the postcondition by
 witness metavariables (returned). `none` if this closed the goal. -/
-def prepareGoal (goal : MVarId) (useFacts := true) (decomposing := false) :
+def prepareGoal (goal : MVarId) (useFacts := true) :
     TacticM (Option (MVarId × Array MVarId)) := do
   let some goal ← pullAndRewrite goal useFacts | return none
   let (goal, witnesses) ← instantiateRightExists goal
   let goal ← exposeGoal goal
-  let goal ← if decomposing then exposeGoal (← decompose goal) else pure goal
   return some (goal, witnesses)
 
 private partial def peelRequiredExists (required : Expr) :
@@ -274,28 +274,15 @@ partial def solveGoal (discharger : Option Syntax.Tactic) (goal : MVarId) :
   if fn.isConstOf ``postEntails && args.size = 3 then
     let (_, nextGoal) ← goal.intro1P
     solveGoal discharger nextGoal
+  else if ← isFrameInference goal then
+    solveHimpl discharger (← exposeGoal goal)
   else
-    let pass (decomposing : Bool) : TacticM Unit := do
-      let goal ← if decomposing then decompose goal else pure goal
-      if ← isFrameInference goal then
-        let goal ← exposeGoal goal
-        let goal ← if decomposing then exposeGoal (← decompose goal) else pure goal
-        solveHimpl discharger goal
-      else
-        let some (goal, witnesses) ← prepareGoal goal (decomposing := decomposing) | return
-        solveHimpl discharger goal
-        for witness in witnesses do
-          unless ← witness.isAssigned do
-            throwError "could not determine the witness {mkMVar witness} of an existential \
-              on the right-hand side"
-    try pass false
-    catch firstError =>
-      try pass true
-      catch secondError =>
-        throwError "iframe failed.\n\
-          {firstError.toMessageData}\n\
-          and, after decomposing the assertions with `isimps`:\n\
-          {secondError.toMessageData}"
+    let some (goal, witnesses) ← prepareGoal goal | return
+    solveHimpl discharger goal
+    for witness in witnesses do
+      unless ← witness.isAssigned do
+        throwError "could not determine the witness {mkMVar witness} of an existential \
+          on the right-hand side"
 
 end
 

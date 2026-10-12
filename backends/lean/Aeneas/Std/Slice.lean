@@ -81,6 +81,7 @@ theorem Slice.as_mut_ptr.spec {T : Type} (s : Slice T) :
   · iframe
   · intro p
     apply (WP.ispec_ok _).2
+    simp only [uncurry_apply_pair]
     iframe
 
 instance {α : Type u} : GetElem (Slice α) Nat α (fun a i => i < a.val.length) where

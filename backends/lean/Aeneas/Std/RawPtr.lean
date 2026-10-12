@@ -431,6 +431,7 @@ theorem core.ptr.from_mut.spec (value : T) :
   · iframe
   · intro q
     apply (ispec_ok _).2
+    simp only [uncurry_apply_pair]
     iframe
 
 end Aeneas.Std

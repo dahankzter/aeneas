@@ -25,4 +25,20 @@ meta def delabEntails : Delab := do
   let rhs ← withNaryArg 1 delab
   `($lhs ⊢ $rhs)
 
+/-- `iexists fun x => H` as `iprop(∃ x, H)`; an eta-reduced `iexists J` is left as is. -/
+@[app_delab iexists]
+meta def delabIexists : Delab := do
+  let e ← getExpr
+  guard (e.isAppOfArity ``iexists 2 && e.appArg!.isLambda)
+  withAppArg <| withBindingBodyUnusedName fun x => do
+    `(iprop(∃ $(⟨x⟩):ident, $(← delab)))
+
+/-- `iforall fun x => H` as `iprop(∀ x, H)`; an eta-reduced `iforall J` is left as is. -/
+@[app_delab iforall]
+meta def delabIforall : Delab := do
+  let e ← getExpr
+  guard (e.isAppOfArity ``iforall 2 && e.appArg!.isLambda)
+  withAppArg <| withBindingBodyUnusedName fun x => do
+    `(iprop(∀ $(⟨x⟩):ident, $(← delab)))
+
 end Aeneas.SepLogic

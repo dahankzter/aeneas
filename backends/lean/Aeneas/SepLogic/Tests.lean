@@ -27,6 +27,24 @@ P Q : IProp
 #guard_msgs in
 example (P Q : IProp) : Entails P (iand P Q) := by done
 
+/-- error: unsolved goals
+cell : ℕ → IProp
+⊢ emp ⊢ iprop(∃ v, ⌜0 < v⌝ ∗ cell v) -/
+#guard_msgs in
+example (cell : Nat → IProp) : emp ⊢ iprop(∃ v, ⌜0 < v⌝ ∗ cell v) := by done
+
+/-- error: unsolved goals
+cell : ℕ → IProp
+⊢ emp ⊢ iprop(∀ v, cell v) -/
+#guard_msgs in
+example (cell : Nat → IProp) : emp ⊢ iprop(∀ v, cell v) := by done
+
+/-- error: unsolved goals
+cell : ℕ → IProp
+⊢ emp ⊢ iexists cell -/
+#guard_msgs in
+example (cell : Nat → IProp) : emp ⊢ iexists cell := by done
+
 example (P Q R : IProp) : iprop(P ∗ (Q ∧ R)) = (P ∗ iand Q R) :=
   rfl
 

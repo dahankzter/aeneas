@@ -97,4 +97,14 @@ example {α : Type} (a b : α) (P Q : α → IProp) :
     P a ∗ P b ∗ Q b ⊢ iprop(∃ x, P x ∗ Q x) := by
   iframe
 
+-- frame inference: a pure atom of the callee's precondition is proved from the context
+example (cell : Nat → Nat → IProp) (p current : Nat) (hcurrent : 0 < current) :
+    ∃ value F, cell p current ⊢ (⌜0 < value⌝ ∗ cell p value) ∗ F :=
+  ⟨_, _, by iframe⟩
+
+-- frame inference: a witness fixed only by a pure atom of the source
+example (cell : Nat → Nat → IProp) (p a : Nat) :
+    ∃ F, cell p 3 ∗ ⌜a = a⌝ ⊢ iprop(∃ v, ⌜v = a⌝ ∗ cell p 3) ∗ F :=
+  ⟨_, by iframe⟩
+
 end Aeneas.SepLogic.Tactic.Tests.IFrame

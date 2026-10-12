@@ -15,6 +15,17 @@ example (cell : Nat → Nat → IProp) (read : Nat → Result Nat)
     ⦃ result => cell p current ∗ ⌜result = current⌝ ⦄ := by
   step*
 
+-- The spec above with the pure condition in the precondition instead of as a premise: frame
+-- inference matches `cell p ?value` and proves `0 < current` from the context.
+example (cell : Nat → Nat → IProp) (read : Nat → Result Nat)
+    (hread : ∀ p value,
+      ⦃ ⌜0 < value⌝ ∗ cell p value ⦄ read p
+      ⦃ result => ⌜result = value⌝ ∗ cell p value ⦄)
+    (p current : Nat) (hcurrent : 0 < current) :
+    ⦃ cell p current ⦄ read p
+    ⦃ result => cell p current ∗ ⌜result = current⌝ ⦄ := by
+  step*
+
 example (cell : Nat → Nat → IProp) (read : Nat → Result Nat)
     (hread : ∀ p value, 0 < value →
       ⦃ cell p value ⦄ read p

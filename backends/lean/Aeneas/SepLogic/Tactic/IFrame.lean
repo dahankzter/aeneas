@@ -152,17 +152,37 @@ partial def solveHimpl (discharger : Option Syntax.Tactic) (goal : MVarId) :
     let sourceAtoms ← flatten source
     let solveWith (required weakening : Expr) (witnesses : Array MVarId) :
         TacticM Bool := do
-      let some (pairs, frameAtoms) ← matchAll sourceAtoms (← flatten required)
-        | return false
+      let (pures, spatial) :=
+        (← flatten required).partition (·.consumeMData.isAppOfArity ``ipure 1)
+      let some (pairs, rest) ← matchAll sourceAtoms spatial | return false
+      -- a pure atom is taken from the source if it is there, and proved from the context otherwise
+      let mut pairs := pairs
+      let mut frameAtoms := rest
+      let mut taken := spatial
+      let mut toProve := #[]
+      for atom in pures do
+        match ← frameAtoms.findIdxM? (isDefEq atom ·) with
+        | some i =>
+          pairs := pairs.push (atom, frameAtoms[i]!)
+          frameAtoms := frameAtoms.eraseIdx! i
+          taken := taken.push atom
+        | none => toProve := toProve.push atom
+      -- every witness must be fixed by matching, before `provePure` sees the facts
       for witness in witnesses do
         unless ← witness.isAssigned do return false
       let frame := mkStar frameAtoms
+      let mut current := mkApp2 (mkConst ``sep) (mkStar taken) frame
+      let mut proof ← mkAppM ``entails_of_eq #[← proveEqAC source current pairs]
+      for atom in toProve do
+        let hP ← provePure discharger (← instantiateMVars atom.consumeMData.appArg!)
+        proof ← mkAppM ``entails_trans #[proof, ← mkAppM ``pure_sep_intro #[current, hP]]
+        current := mkApp2 (mkConst ``sep) atom current
       frameMVar.assign frame
       let cancelled := mkApp2 (mkConst ``sep) (← instantiateMVars required) frame
-      let reorder ← mkAppM ``entails_of_eq #[← proveEqAC source cancelled pairs]
+      let reorder ← mkAppM ``entails_of_eq #[← proveEqAC current cancelled]
       let weaken ← mkAppM ``sep_mono
         #[← instantiateMVars weakening, ← mkAppM ``entails_refl #[frame]]
-      goal.assign (← mkAppM ``entails_trans #[reorder, weaken])
+      goal.assign (← mkAppM ``entails_trans #[← mkAppM ``entails_trans #[proof, reorder], weaken])
       return true
     let solvePeeled : TacticM Bool := do
       let (peeled, weakening, witnesses) ← peelRequiredExists original

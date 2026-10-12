@@ -57,6 +57,27 @@ example (p : MutRawPtr Nat) (value : Nat) :
     ⦃ p ↦ value ⦄ Fixtures.incr_ptr p ⦃ emp⦄div := by
   dwp_mono (ispec_dispec (Fixtures.incr_ptr.spec p value))
 
+/- `dispec` is irreducible: the `i` tactics reach its entailment through `iwp =>`, and `step`
+through the same unfolding. -/
+example (cell : Nat → IProp) (m : Result Unit) (h : ∀ x, ⦃ cell x ⦄ m ⦃ _ => emp ⦄div) :
+    ⦃ iprop(∃ x, cell x) ⦄ m ⦃ _ => emp ⦄div := by
+  iwp => iintro x
+  exact h x
+
+example (cell : Nat → IProp) (alloc use : Result Unit)
+    (halloc : ⦃ emp ⦄ alloc ⦃ _ => ∃ v, ⌜0 < v⌝ ∗ cell v ⦄div)
+    (huse : ∀ v, 0 < v → ⦃ cell v ⦄ use ⦃ _ => emp ⦄div) :
+    ⦃ emp ⦄ (do alloc; use) ⦃ _ => emp ⦄div := by
+  step with halloc as ⟨v, hv⟩
+  guard_hyp hv : 0 < v
+  step*
+
+example (cell : Nat → IProp) (alloc : Result Nat) (use : Nat → Result Unit)
+    (halloc : ⦃ emp ⦄ alloc ⦃ r => ∃ w, ⌜0 < r⌝ ∗ cell w ⦄div)
+    (huse : ∀ v w, 0 < v → ⦃ cell w ⦄ use v ⦃ _ => cell w ⦄div) :
+    ⦃ emp ⦄ (do let r ← alloc; use r) ⦃ _ => ∃ w, cell w ⦄div := by
+  step*
+
 section
 
 unseal Result
@@ -112,6 +133,9 @@ theorem countdown.spec (p : MutRawPtr Nat) (value : Nat) :
       (fun _ _ => iprop(p ↦ 0))) ?_
   intro loop hLoop v
   step*
+  -- `p ↦ v ⊢ p ↦ 0` with `value = v` and `value = 0`: `iframe` does not chain the equalities
+  subst_vars
+  iframe
 
 def waitZero (p : MutRawPtr Nat) (rounds : Nat) : Result Nat := do
   let value ← read p

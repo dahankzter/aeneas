@@ -59,11 +59,10 @@ syntax (name := iSimp) "isimp" (" only")? (" [" term,* "]")? : tactic
 private def evalISimp (lemmas : Array (TSyntax `term)) (simpOnly : Bool := false) : TacticM Unit :=
   Tactic.focus do withMainContext do
     let simpLemmas ← lemmas.mapM fun stx => `(Parser.Tactic.simpLemma| $stx:term)
+    discard <| expectEntailment `isimp (post := true)
     let goal ← getMainGoal
-    let target := (← instantiateMVars (← goal.getType)).consumeMData
-    let spatial := target.isAppOfArity ``Entails 2 || target.isAppOfArity ``postEntails 3
     let frameInference ← isFrameInference goal
-    if spatial && !frameInference && !simpOnly then
+    if !frameInference && !simpOnly then
       evalTactic (← `(tactic|
         simp (config := { failIfUnchanged := false, dsimp := false }) only
           [isimps, $simpLemmas,*]))
@@ -71,7 +70,7 @@ private def evalISimp (lemmas : Array (TSyntax `term)) (simpOnly : Bool := false
       evalTactic (← `(tactic|
         simp (config := { failIfUnchanged := false, dsimp := false }) only [$simpLemmas,*]))
     unless (← getUnsolvedGoals).isEmpty || frameInference do normalizeSep
-    unless (← getUnsolvedGoals).isEmpty || !spatial || frameInference do
+    unless (← getUnsolvedGoals).isEmpty || frameInference do
       replaceMainGoal (← IFrame.simplifyGoal (← getMainGoal) (!simpOnly))
 
 elab_rules : tactic

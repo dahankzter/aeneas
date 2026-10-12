@@ -216,9 +216,7 @@ example (x : Nat) :
 example (x : Nat) (P : IProp) :
     ⦃ P ⦄ usePartialPair x ⦃ z => P ∗ ⌜z = x + (x + 1)⌝ ⦄div := by
   unfold usePartialPair
-  step as ⟨pair⟩
-  apply dispec_ipure.mpr
-  rintro ⟨hFirst, hSecond⟩
+  step as ⟨pair, hFirst, hSecond⟩
   guard_hyp hFirst : pair.1 = x
   guard_hyp hSecond : pair.2 = x + 1
   step*

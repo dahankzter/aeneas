@@ -264,6 +264,7 @@ syntax (name := iFrame) "iframe" (" by " tacticSeq)? : tactic
 
 elab_rules : tactic
   | `(tactic| iframe $[by $tac?]?) => Tactic.focus do withMainContext do
+  discard <| expectEntailment `iframe (post := true)
   let discharger : Option Syntax.Tactic := tac?.map fun tac => ⟨tac.raw⟩
   let localAsms :=
     (← (← getLCtx).getAssumptions).map LocalDecl.fvarId |>.toArray

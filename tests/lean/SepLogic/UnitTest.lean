@@ -64,13 +64,14 @@ example (p : MutRawPtr Nat) :
   fail_if_success
     step
     done
-  iintro_shallow
+  fail_if_success iintro_shallow
+  iwp => iintro_shallow
   step*
 
 example (p : MutRawPtr Nat) (value : Nat) :
     ⦃ iprop(⌜value = 1⌝ ∗ p ↦ value) ⦄ Fixtures.incr_ptr p ⦃ p ↦ 2⦄ := by
   unfold Fixtures.incr_ptr
-  iintro
+  iwp => iintro
   step*
 
 example (p : MutRawPtr Nat) (value : Nat) :
@@ -99,7 +100,7 @@ example (p : MutRawPtr Nat) (value : Nat) (P F : Prop) :
 example (p q : MutRawPtr Nat) :
     ⦃ iprop(⌜q = p⌝ ∗ p ↦ 1) ⦄ Fixtures.incr_ptr q ⦃ iprop(⌜q = p⌝ ∗ p ↦ 2)⦄ := by
   unfold Fixtures.incr_ptr
-  iintro_shallow
+  iwp => iintro_shallow
   step*
 
 example (p : MutRawPtr Nat) (n : Nat) :
@@ -145,7 +146,7 @@ theorem touchAny.spec (p : MutRawPtr Nat) :
   fail_if_success
     step*
     done
-  iintro n
+  iwp => iintro n
   step*
 
 def touchThenSet (p : MutRawPtr Nat) : Result Unit := do
@@ -367,7 +368,7 @@ theorem swapEq (p q : MutRawPtr Nat) : iprop(p ↦ 1 ∗ q ↦ 2) = iprop(q ↦ 
 example (p q : MutRawPtr Nat) :
     ⦃ iprop((p ↦ 1 ∗ q ↦ 2) ∗ emp) ⦄ Fixtures.incr_ptr q ⦃ iprop(q ↦ 3 ∗ p ↦ 1)⦄ := by
   unfold Fixtures.incr_ptr
-  irewrite (swapEq p q)
+  iwp => irewrite (swapEq p q)
   step*
 
 example (p : MutRawPtr Nat) : ⦃ p ↦ 1 ⦄ (pure 5 : Result Nat) ⦃ v => ⌜v = 5⌝ ∗ p ↦ 1⦄ := by
@@ -398,7 +399,7 @@ example (p q : MutRawPtr Nat) (x : Nat) :
     iframe
   case hNext =>
     intro _
-    iintro
+    iwp => iintro
     step*
 
 example (Q₁ Q₂ : IPost Nat) (H : IProp) :
@@ -421,7 +422,7 @@ example (p : MutRawPtr Nat) (x : Nat) :
 example (p : MutRawPtr Nat) :
     ⦃ iprop(∃ n, p ↦ n) ⦄ touchAny p ⦃ iprop(∃ n, p ↦ n)⦄ := by
   unfold touchAny
-  iintro n
+  iwp => iintro n
   step with read.spec p n
   step*
 
@@ -442,10 +443,6 @@ example (p : MutRawPtr Nat) : ⦃ p ↦ 3 ⦄ readTwice p ⦃ r => iprop(⌜0 < 
 example (p : MutRawPtr Nat) (n : Nat) (b : Bool) (hb : b = true) (hguard : b = true → 0 < n) :
     ⦃ p ↦ n ⦄ readTwice p ⦃ r => iprop(⌜0 < r⌝ ∗ p ↦ n)⦄ := by
   step*
-
-example (p : MutRawPtr Nat) (n : Nat) (b : Bool) (hb : b = true) (hguard : b = true → 0 < n) :
-    ⦃ p ↦ n ⦄ readTwice p ⦃ r => iprop(⌜0 < r⌝ ∗ p ↦ n)⦄ := by
-  step* -grind -threadGrindState
 
 example (q : MutRawPtr Nat) (x y : Nat) :
     (q ↦* [x, y]) = iprop(q ↦ x ∗ (q.shift 1) ↦ y) :=

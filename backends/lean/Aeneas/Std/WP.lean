@@ -911,15 +911,52 @@ private meta def normalizeGoal : TacticM Unit := do
   if newTarget != target then
     replaceMainGoal [← goal.change newTarget]
 
+/-- `isimp only` on an entailment; `normalizeSep` on other goals. -/
 private meta def simplifySpatialGoal : TacticM Unit := do
   unless (← getUnsolvedGoals).isEmpty do
+    let target := (← instantiateMVars (← getMainTarget)).consumeMData
+    let spatial := target.isAppOfArity ``Entails 2 || target.isAppOfArity ``postEntails 3
     discard <| commitWhen do
-      evalTactic (← `(tactic| isimp only))
+      if spatial then evalTactic (← `(tactic| isimp only)) else Normalize.normalizeSep
       let goals ← getUnsolvedGoals
       return !(goals.length > 1 || (← goals.anyM fun goal =>
         goal.withContext do return !(← isProp (← goal.getType))))
 
+/-- `@ispec α P m Q` (resp. `@dispec`) as the entailment it unfolds to, `P ⊢ @iwp α true m Q`
+(resp. `false`). -/
+meta def unfoldSpec? (target : Expr) : Option Expr := do
+  let target := target.consumeMData
+  let .const name us := target.getAppFn | none
+  let total ← if name == ``ispec then some (mkConst ``Bool.true)
+    else if name == ``dispec then some (mkConst ``Bool.false) else none
+  let #[α, P, m, Q] := target.getAppArgs | none
+  return mkApp2 (mkConst ``Entails) P (mkApp4 (mkConst ``iwp us) α total m Q)
+
+/-- The inverse of `unfoldSpec?`. -/
+meta def foldSpec? (target : Expr) : Option Expr := do
+  let target := target.consumeMData
+  guard (target.isAppOfArity ``Entails 2)
+  let wp := target.appArg!.consumeMData
+  let .const ``iwp us := wp.getAppFn | none
+  let #[α, total, m, Q] := wp.getAppArgs | none
+  let name ← if total.isConstOf ``Bool.true then some ``ispec
+    else if total.isConstOf ``Bool.false then some ``dispec else none
+  return mkApp4 (mkConst name us) α target.appFn!.appArg! m Q
+
 end Intro
+
+/-- Run `tac` on `P ⊢ iwp b m Q`, the entailment behind the `ispec`/`dispec` main goal, then fold
+back each goal `tac` leaves of the shape `P' ⊢ iwp b m Q'`. -/
+meta def onSpecEntailment (tac : TacticM Unit) : TacticM Unit := Tactic.focus do
+  let goal ← getMainGoal
+  let some entailment := Intro.unfoldSpec? (← instantiateMVars (← goal.getType))
+    | throwError "iwp: expected an `ispec`/`dispec` goal, got{indentExpr (← goal.getType)}"
+  replaceMainGoal [← goal.replaceTargetDefEq entailment]
+  tac
+  setGoals (← (← getUnsolvedGoals).mapM fun goal => do
+    match Intro.foldSpec? (← instantiateMVars (← goal.getType)) with
+    | some spec => goal.replaceTargetDefEq spec
+    | none => pure goal)
 
 /-- The tactic `step` runs on the goals it prepares for `ispec` and `dispec`. -/
 meta def introIspec : TacticM Unit := do
@@ -927,7 +964,9 @@ meta def introIspec : TacticM Unit := do
     replaceMainGoal [(← (← getMainGoal).intros).2]
     withMainContext do
     Intro.normalizeGoal
-    evalTactic (← `(tactic| iintro_shallow_post))
+    if (Intro.unfoldSpec? (← instantiateMVars (← getMainTarget))).isSome then
+      onSpecEntailment pullShallowPost
+    else pullShallowPost
     unless (← getUnsolvedGoals).isEmpty do
       withMainContext do
       let _ ← Aeneas.Simp.simpAt true
@@ -941,6 +980,13 @@ meta def introIspec : TacticM Unit := do
     Intro.simplifySpatialGoal
 
 elab (name := intro_ispec) "intro_ispec" : tactic => introIspec
+
+/-- `iwp => tac`: unfolds `ispec`/`dispec` goals to the underlying entailment `P ⊢ iwp b m Q`,
+                  runs `tac`, and then folds back, if possible, to `ispec`/`dispec`.  -/
+syntax (name := iwpTac) "iwp" " => " tacticSeq : tactic
+
+elab_rules : tactic
+  | `(tactic| iwp => $tac) => onSpecEntailment (evalTactic tac)
 
 /-- Reduce an `ispec` about `pure v` to the entailment `P ⊢ Q v`. -/
 macro "wp_pures" : tactic => `(tactic| apply (ispec_ok _).mpr)

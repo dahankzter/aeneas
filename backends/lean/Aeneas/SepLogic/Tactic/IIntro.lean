@@ -38,6 +38,7 @@ syntax (name := iIntro) "iintro" (ppSpace colGt rintroPat)* : tactic
 
 elab_rules : tactic
   | `(tactic| iintro $ps:rintroPat*) => Tactic.focus do withMainContext do
+    discard <| expectEntailment `iintro (post := true)
     let goal ← getMainGoal
     if ← isFrameInference goal then
       throwError "iintro: this is a frame-inference goal. Extracting anything from its \
@@ -45,9 +46,6 @@ elab_rules : tactic
         use `iintro` at the level of the specification instead."
     let goal ← if (← instantiateMVars (← goal.getType)).consumeMData.isAppOfArity ``postEntails 3
       then pure (← goal.intro1P).2 else pure goal
-    let target ← goal.withContext do instantiateMVars (← goal.getType)
-    if (← goal.withContext (exposeEntailment? target)).isNone then
-      throwError "iintro: the goal is not a separation-logic entailment:\n{target}"
     let limit := if ps.isEmpty then none else some ps.size
     let (goal, new) ← pullLeftFVars goal (limit := limit)
     if ps.isEmpty then
@@ -63,19 +61,26 @@ elab_rules : tactic
 /-- `iintro`, but without unfolding definitions (so that the predicates a later `step` must match
 are never opened), and naming the facts `h`. -/
 elab "iintro_shallow" : tactic => withMainContext do
+  discard <| expectEntailment `iintro_shallow
   replaceMainGoal [← pullLeft (← getMainGoal) (unfold := false) (names := true)]
 
-/-- `iintro_shallow` after `step`: the frame it inferred, the right operand of the precondition,
-is left untouched. Then normalizes the assertions. -/
-elab "iintro_shallow_post" : tactic => withMainContext do
+/-- The body of `iintro_shallow_post`, doing nothing but `normalizeSep` on other goals than
+entailments. -/
+def pullShallowPost : TacticM Unit := withMainContext do
   let goal ← getMainGoal
-  if let some entailment ← exposeEntailment? (← instantiateMVars (← goal.getType)) then
-    let source := (← reducePostApplication entailment.appFn!.appArg!).consumeMData
+  if let some (source, _) ← entailment? goal then
+    let source := (← reducePostApplication source).consumeMData
     let frame ← if source.isAppOfArity ``sep 2 then
         pure (some (← reducePostApplication source.appArg!).consumeMData)
       else pure none
     replaceMainGoal [← pullLeft goal (unfold := false) (frame := frame) (names := true)]
   normalizeSep
+
+/-- `iintro_shallow` after `step`: the frame it inferred, the right operand of the precondition,
+is left untouched. Then normalizes the assertions. -/
+elab "iintro_shallow_post" : tactic => withMainContext do
+  discard <| expectEntailment `iintro_shallow_post
+  pullShallowPost
 
 /-- The proof of `source ⊢ destination` from `next : P₁ → … → Pₖ → source ⊢ destination`, given
 for each `Pᵢ` the rest `Tᵢ` and `extractᵢ : source ⊢ ⌜Pᵢ⌝ ∗ Tᵢ`. -/
@@ -90,12 +95,8 @@ private def keepPures (source destination next : Expr) (hyps : Array Expr) :
 /-- Copy the pure facts of the precondition that are not in the context yet into the context,
 without consuming them. -/
 elab "iintro_keep" : tactic => withMainContext do
+  let (source, destination) ← expectEntailment `iintro_keep
   let goal ← getMainGoal
-  let target ← instantiateMVars (← goal.getType)
-  let some entailment ← exposeEntailment? target
-    | throwError "iintro_keep: the goal is not a separation-logic entailment"
-  let source := entailment.appFn!.appArg!
-  let destination := entailment.appArg!
   let lctx ← getLCtx
   let known (proposition : Expr) (hyp : Expr) : MetaM Bool :=
     withNewMCtxDepth (withReducible (isDefEq hyp proposition))
@@ -121,7 +122,7 @@ elab "iintro_keep" : tactic => withMainContext do
     extract := mkApp5 (mkConst ``entails_trans) source current rest extract
       (mkApp2 (mkConst ``sep_elim_left) rest atom)
     current := rest
-  let newType ← props.foldrM (init := target)
+  let newType ← props.foldrM (init := ← goal.getType)
     fun P acc => return mkForall (← mkFreshUserName `h) .default P acc
   let next ← mkFreshExprSyntheticOpaqueMVar newType
   goal.assign (← keepPures source destination next #[] steps.toList)

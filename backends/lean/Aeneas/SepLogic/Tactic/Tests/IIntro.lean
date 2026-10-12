@@ -8,7 +8,6 @@ namespace Aeneas.SepLogic.Tactic.Tests.IIntro
 open Aeneas.SepLogic
 open Aeneas.Std (MutRawPtr)
 
-private def wrappedEntails (P Q : IProp) : Prop := P ⊢ Q
 private def hiddenPure (P : Prop) : IProp := ⌜P⌝
 
 example (P Q : IProp) : P ∗ Q ⊢ Q ∗ P := by
@@ -25,58 +24,44 @@ example {α : Type} (P : α → IProp) : iprop(∃ x, P x) ⊢ iprop(∃ x, P x)
   iintro
   iframe
 
-example (P : Prop) (H : IProp) : wrappedEntails iprop(⌜P⌝ ∗ H) H := by
-  iintro hP
-  guard_hyp hP : P
-  guard_target = wrappedEntails H H
-  unfold wrappedEntails
-  iframe
-
-example (H : IProp) : wrappedEntails (hiddenPure False ∗ H) H := by
+example (H : IProp) : hiddenPure False ∗ H ⊢ H := by
   iintro hFalse
   contradiction
 
 -- `iintro_shallow` pulls the real `⌜P⌝`, not the pure fact hidden in `hiddenPure`.
-example (P Q : Prop) (H : IProp) : wrappedEntails (hiddenPure Q ∗ ⌜P⌝ ∗ H) H := by
+example (P Q : Prop) (H : IProp) : hiddenPure Q ∗ ⌜P⌝ ∗ H ⊢ H := by
   iintro_shallow
   guard_hyp h : P
-  guard_target = wrappedEntails (hiddenPure Q ∗ H) H
-  unfold wrappedEntails hiddenPure
+  guard_target = (hiddenPure Q ∗ H ⊢ H)
+  unfold hiddenPure
   iframe
 
-example (P : Prop) (H : IProp) :
-    wrappedEntails iprop(⌜P⌝ ∗ H) iprop(⌜P⌝ ∗ H) := by
+example (P : Prop) (H : IProp) : iprop(⌜P⌝ ∗ H) ⊢ iprop(⌜P⌝ ∗ H) := by
   iintro_keep
   rename_i hP
   guard_hyp hP : P
-  guard_target = wrappedEntails iprop(⌜P⌝ ∗ H) iprop(⌜P⌝ ∗ H)
-  unfold wrappedEntails
+  guard_target = (iprop(⌜P⌝ ∗ H) ⊢ iprop(⌜P⌝ ∗ H))
   iframe
 
-example (P Q : Prop) (H : IProp) :
-    wrappedEntails iprop(⌜P⌝ ∗ H ∗ ⌜Q⌝) H := by
+example (P Q : Prop) (H : IProp) : iprop(⌜P⌝ ∗ H ∗ ⌜Q⌝) ⊢ H := by
   iintro_keep
   rename_i hP hQ
   guard_hyp hP : P
   guard_hyp hQ : Q
-  guard_target = wrappedEntails iprop(⌜P⌝ ∗ H ∗ ⌜Q⌝) H
-  unfold wrappedEntails
+  guard_target = (iprop(⌜P⌝ ∗ H ∗ ⌜Q⌝) ⊢ H)
   iframe
 
-example (P Q : Prop) (H : IProp) (_ : P) :
-    wrappedEntails iprop(⌜P⌝ ∗ H ∗ ⌜Q⌝) H := by
+example (P Q : Prop) (H : IProp) (_ : P) : iprop(⌜P⌝ ∗ H ∗ ⌜Q⌝) ⊢ H := by
   iintro_keep
   rename_i hQ
   guard_hyp hQ : Q
-  unfold wrappedEntails
   iframe
 
 -- a fact occurring twice is copied once
-example (P : Prop) (H : IProp) : wrappedEntails iprop(⌜P⌝ ∗ H ∗ ⌜P⌝) H := by
+example (P : Prop) (H : IProp) : iprop(⌜P⌝ ∗ H ∗ ⌜P⌝) ⊢ H := by
   iintro_keep
   rename_i hP
   fail_if_success have : P := by clear hP; assumption
-  unfold wrappedEntails
   iframe
 
 -- `iintro x` opens the `∃` in place, and nothing else

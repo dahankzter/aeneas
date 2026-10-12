@@ -63,15 +63,11 @@ elab "irewrite " symm:("← ")? rule:term : tactic => Tactic.focus do withMainCo
     unless (← instantiateMVars (← inferType rule)).consumeMData.isAppOfArity ``Eq 3 do
       throwError "irewrite ← expects an equality `A = B`, got {← inferType rule}"
     mkEqSymm rule
+  let (source, destination) ← expectEntailment `irewrite
   let goal ← getMainGoal
-  let target ← instantiateMVars (← goal.getType)
-  let some entailment ← exposeEntailment? target
-    | throwError "irewrite expects an entailment, got\n{target}"
-  let args := entailment.getAppArgs
-  let (rewritten, proof) ← IRewrite.rewriteAssertion args[0]! rule
-  let nextType ← mkEntailmentLike target args[0]! args[1]! rewritten
-  let next ← mkFreshExprSyntheticOpaqueMVar nextType
-  goal.assign (mkApp5 (mkConst ``entails_trans) args[0]! rewritten args[1]! proof next)
+  let (rewritten, proof) ← IRewrite.rewriteAssertion source rule
+  let next ← mkFreshExprSyntheticOpaqueMVar (mkApp2 (mkConst ``Entails) rewritten destination)
+  goal.assign (mkApp5 (mkConst ``entails_trans) source rewritten destination proof next)
   postprocessAppMVars `irewrite goal premises binderInfos
   let premises ← premises.filterM fun premise => return !(← premise.mvarId!.isAssigned)
   replaceMainGoal (next.mvarId! :: premises.toList.map Expr.mvarId!)

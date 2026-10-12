@@ -167,6 +167,15 @@ def entailment? (goal : MVarId) : MetaM (Option (Expr × Expr)) := do
   unless target.isAppOfArity ``Entails 2 do return none
   return some (target.appFn!.appArg!, target.appArg!)
 
+/-- The precondition and postcondition of the main goal; fails with an error naming `tactic`
+unless it is a separation-logic entailment `H ⊢ H'` (or, with `post`, `Q ⊢+ Q'`). -/
+def expectEntailment (tactic : Name) (post := false) : TacticM (Expr × Expr) :=
+  withMainContext do
+  let target := (← instantiateMVars (← getMainTarget)).consumeMData
+  unless target.isAppOfArity ``Entails 2 || (post && target.isAppOfArity ``postEntails 3) do
+    throwError "{tactic}: expected a separation-logic entailment, got{indentExpr target}"
+  return (target.appFn!.appArg!, target.appArg!)
+
 /-- Is `destination` a frame-inference shape `Hcallee ∗ ?F`? Then no side may be reorganized. -/
 def frameMVar? (destination : Expr) : MetaM (Option MVarId) := do
   let (destFn, destArgs) :=
@@ -265,37 +274,6 @@ where
       return mkAppN (mkConst ``entails_pure_l) #[proposition, tail, destination, body]
     | _, _, next => return next
 
-partial def exposeEntailment? (e : Expr) : MetaM (Option Expr) := do
-  let e := (← instantiateMVars e).consumeMData
-  if e.isAppOfArity ``Entails 2 then return some e
-  match ← unfoldDefinition? e with
-  | some e' => exposeEntailment? e'
-  | none => return none
-
-/-- `target`, an entailment `source ⊢ destination` possibly behind definitions, with the source
-replaced by `newSource`. -/
-def mkEntailmentLike (target source destination newSource : Expr) : MetaM Expr := do
-  let (fn, targetArgs) :=
-    target.consumeMData.withApp fun fn args => (fn, args)
-  let newSourceType ← inferType newSource
-  for h : i in [:targetArgs.size] do
-    let argType ← inferType targetArgs[i]
-    if ← isDefEq argType newSourceType then
-      let candidate := mkAppN fn (targetArgs.set! i newSource)
-      if let some exposed ← exposeEntailment? candidate then
-        let args := exposed.getAppArgs
-        if ← isDefEq args[0]! newSource then
-          if ← isDefEq args[1]! destination then
-            return candidate
-  let replacement := target.replace fun e =>
-    if e == source then some newSource else none
-  if let some exposed ← exposeEntailment? replacement then
-    let args := exposed.getAppArgs
-    if ← isDefEq args[0]! newSource then
-      if ← isDefEq args[1]! destination then
-        return replacement
-  mkAppM ``Entails #[newSource, destination]
-
 /-- `e` with its `k`-th atom (in the order of `flatten`, after the unfolding of `exposeAll` if
 `unfold`) replaced by `f k atom`, or dropped if `none`. The rest is unchanged: same `sep`
 structure, and the definitions whose atoms are all kept stay folded. `none` if no atom is left. -/
@@ -317,8 +295,8 @@ private partial def mapAtoms (unfold : Bool) (frame : Option Expr)
   if fn.isConstOf `Aeneas.SepLogic.emp then return some e
   atom
 
-/-- Move the existentials and pure facts of the precondition of `goal` (an entailment, possibly
-behind definitions) into the context, without simp, from left to right: each round either removes
+/-- Move the existentials and pure facts of the precondition of the entailment `goal` into the
+context, without simp, from left to right: each round either removes
 the `⌜P⌝` atoms before the first `∃`, or, if there are none, opens that `∃`, replacing it by its
 body in place; the rest of the precondition is unchanged. At
 most `limit` items are moved. With `unfold`, definitions hiding connectives are looked into; the
@@ -328,10 +306,7 @@ partial def pullLeft (goal : MVarId) (unfold := true) (frame : Option Expr := no
     (names := false) (limit : Option Nat := none) : TacticM MVarId := goal.withContext do
   if limit == some 0 then return goal
   if ← isFrameInference goal then return goal
-  let target ← instantiateMVars (← goal.getType)
-  let some entailment ← exposeEntailment? target | return goal
-  let source := entailment.appFn!.appArg!
-  let destination := entailment.appArg!
+  let some (source, destination) ← entailment? goal | return goal
   let expose (e : Expr) : MetaM Expr :=
     if unfold then exposeAll e frame else reducePostApplication e
   let atoms ← flatten (← expose source) frame
@@ -342,7 +317,8 @@ partial def pullLeft (goal : MVarId) (unfold := true) (frame : Option Expr := no
     return mkApp3 (mkConst ``entails_of_eq) a b (← proveEqAC (← expose a) (← expose b))
   let trans (a b c pab pbc : Expr) := mkApp5 (mkConst ``entails_trans) a b c pab pbc
   let binderName (n : Name) : MetaM Name := if names then pure n else mkFreshUserName n
-  let next (newSource : Expr) := mkEntailmentLike target source destination newSource
+  let next (newSource : Expr) : MetaM Expr :=
+    pure (mkApp2 (mkConst ``Entails) newSource destination)
   let is (name : Name) (arity : Nat) (atom : Expr) :=
     frame != some atom.consumeMData && atom.consumeMData.isAppOfArity name arity
   let firstExists := atoms.findIdx? (is ``iexists 2)

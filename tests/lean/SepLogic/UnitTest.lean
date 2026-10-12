@@ -76,14 +76,14 @@ example (p : MutRawPtr Nat) (value : Nat) :
 
 example (p : MutRawPtr Nat) (value : Nat) :
     ⦃ iprop(p ↦ value ∗ ⌜value = 1⌝) ⦄ pure () ⦃ p ↦ value⦄ := by
-  wp_pures
+  apply (ispec_ok _).mpr
   iintro_shallow
   guard_hyp h : value = 1
   iframe
 
 example (p : MutRawPtr Nat) (value : Nat) :
     ⦃ iprop(p ↦ value ∗ ⌜value = 1⌝) ⦄ pure () ⦃ p ↦ value⦄div := by
-  dwp_pures
+  apply (dispec_ok _).mpr
   iintro_shallow
   guard_hyp h : value = 1
   iframe
@@ -91,7 +91,7 @@ example (p : MutRawPtr Nat) (value : Nat) :
 example (p : MutRawPtr Nat) (value : Nat) (P F : Prop) :
     ⦃ iprop((p ↦ value ∗ ⌜P⌝) ∗ ⌜F⌝) ⦄ pure ()
       ⦃ iprop(p ↦ value ∗ ⌜F⌝)⦄ := by
-  wp_pures
+  apply (ispec_ok _).mpr
   iintro_shallow_post
   guard_hyp h : P
   fail_if_success have : F := by assumption
@@ -105,7 +105,7 @@ example (p q : MutRawPtr Nat) :
 
 example (p : MutRawPtr Nat) (n : Nat) :
     ⦃ iprop(⌜n = 1⌝ ∗ p ↦ n) ⦄ pure () ⦃ iprop(⌜n = 1⌝ ∗ p ↦ 1)⦄ := by
-  wp_pures
+  apply (ispec_ok _).mpr
   iintro_keep
   guard_target = (iprop(⌜n = 1⌝ ∗ p ↦ n) ⊢ iprop(⌜n = 1⌝ ∗ p ↦ 1))
   iframe
@@ -372,12 +372,11 @@ example (p q : MutRawPtr Nat) :
   step*
 
 example (p : MutRawPtr Nat) : ⦃ p ↦ 1 ⦄ (pure 5 : Result Nat) ⦃ v => ⌜v = 5⌝ ∗ p ↦ 1⦄ := by
-  wp_pures
-  iframe
+  step*
 
 example (p q : MutRawPtr Nat) (x : Nat) :
     ⦃ iprop(p ↦ x ∗ q ↦ 9) ⦄ Fixtures.incr_ptr p ⦃ iprop(q ↦ 9 ∗ p ↦ (x + 1))⦄ := by
-  wp_apply (Fixtures.incr_ptr.spec p x)
+  step*
 
 
 example (p q : MutRawPtr Nat) :

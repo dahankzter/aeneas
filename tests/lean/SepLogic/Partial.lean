@@ -46,16 +46,15 @@ example : ⦃ emp ⦄ Fixtures.incr_borrow 1 ⦃ result => ⌜result = 2⌝⦄di
   ispec_dispec (Fixtures.incr_borrow.spec 1)
 
 example (p : MutRawPtr Nat) : ⦃ p ↦ 1 ⦄ (pure 5 : Result Nat) ⦃ v => ⌜v = 5⌝ ∗ p ↦ 1⦄div := by
-  dwp_pures
-  iframe
+  step*
 
 example (p q : MutRawPtr Nat) (x : Nat) :
     ⦃ iprop(p ↦ x ∗ q ↦ 9) ⦄ Fixtures.incr_ptr p ⦃ iprop(q ↦ 9 ∗ p ↦ (x + 1))⦄div := by
-  dwp_apply (ispec_dispec (Fixtures.incr_ptr.spec p x))
+  step*
 
 example (p : MutRawPtr Nat) (value : Nat) :
     ⦃ p ↦ value ⦄ Fixtures.incr_ptr p ⦃ emp⦄div := by
-  dwp_mono (ispec_dispec (Fixtures.incr_ptr.spec p value))
+  step*
 
 /- `dispec` is irreducible: the `i` tactics reach its entailment through `iwp =>`, and `step`
 through the same unfolding. -/

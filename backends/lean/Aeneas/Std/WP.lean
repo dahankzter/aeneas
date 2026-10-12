@@ -988,46 +988,6 @@ syntax (name := iwpTac) "iwp" " => " tacticSeq : tactic
 elab_rules : tactic
   | `(tactic| iwp => $tac) => onSpecEntailment (evalTactic tac)
 
-/-- Reduce an `ispec` about `pure v` to the entailment `P ⊢ Q v`. -/
-macro "wp_pures" : tactic => `(tactic| apply (ispec_ok _).mpr)
-
-/-- Apply a specification, frame unused resources, and discharge the entailment with `iframe`. -/
-syntax "wp_apply" (ppSpace colGt term)? (" by " tacticSeq)? : tactic
-
-macro_rules
-  | `(tactic| wp_apply $[$thm?]? $[by $tac?]?) => do
-    let apply ←
-      match thm? with
-      | some thm => `(tactic| refine ispec_mono $thm ?_ (entails_refl _))
-      | none => `(tactic| refine ispec_mono (by assumption) ?_ (entails_refl _))
-    match tac? with
-    | none => `(tactic| ($apply; iframe))
-    | some tac => `(tactic| ($apply; iframe by $tac))
-
-/-- Re-state a proved `ispec` under a weaker postcondition. -/
-macro "wp_mono " thm:term : tactic =>
-  `(tactic| (refine ispec_mono $thm ?_ (entails_refl _) <;> iframe))
-
-/-- `wp_pures` for `dispec`. -/
-macro "dwp_pures" : tactic => `(tactic| apply (dispec_ok _).mpr)
-
-/-- `wp_apply` for `dispec`. -/
-syntax "dwp_apply" (ppSpace colGt term)? (" by " tacticSeq)? : tactic
-
-macro_rules
-  | `(tactic| dwp_apply $[$thm?]? $[by $tac?]?) => do
-    let apply ←
-      match thm? with
-      | some thm => `(tactic| refine dispec_mono $thm ?_ (entails_refl _))
-      | none => `(tactic| refine dispec_mono (by assumption) ?_ (entails_refl _))
-    match tac? with
-    | none => `(tactic| ($apply; iframe))
-    | some tac => `(tactic| ($apply; iframe by $tac))
-
-/-- `wp_mono` for `dispec`. -/
-macro "dwp_mono " thm:term : tactic =>
-  `(tactic| (refine dispec_mono $thm ?_ (entails_refl _) <;> iframe))
-
 theorem ret.spec (value : α) :
     ⦃ emp ⦄ Result.ok value ⦃ result => ⌜result = value⌝⦄ :=
   (ispec_ok value).mpr fun _ _ => rfl
